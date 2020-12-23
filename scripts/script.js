@@ -1,4 +1,7 @@
-const transationUl = document.querySelector('#transactions')
+const transactionUl = document.querySelector('#transactions')
+const incomeDisplay = document.querySelector('#money-plus')
+const expenseDisplay = document.querySelector('#money-minus')
+const balanceDisplay = document.querySelector('#balance')
 
 const dummyTransactions = [
   {id:1, name: 'Bolo', amount:-20.00},
@@ -7,17 +10,45 @@ const dummyTransactions = [
   {id:1, name: 'Livro', amount:-20.00}
 ]
 
-const addTransactionIntoDOM = transation => {
-  const operator = transation.amount < 0 ? '-' : '+'
-  const CSSClass = transation.amount < 0 ? 'minus' : 'plus'
+const addTransactionIntoDOM = transaction => {
+  const operator = transaction.amount < 0 ? '-' : '+'
+  const CSSClass = transaction.amount < 0 ? 'minus' : 'plus'
   const li = document.createElement('li') 
-  const amountWithoutOperator = Math.abs(transation.amount)
+  const amountWithoutOperator = Math.abs(transaction.amount)
 
   li.classList.add(CSSClass)
   li.innerHTML = `
-  ${transation.name} <span>${operator} R$ ${amountWithoutOperator}</span><button class="delete-btn">x</button>
+  ${transaction.name} <span>${operator} R$ ${amountWithoutOperator}</span><button class="delete-btn">x</button>
   `
-  transationUl.append(li)//prepend
+  transactionUl.append(li)//prepend
 }
 
-addTransactionIntoDOM(dummyTransactions[1])
+const updateBalanceValues = () => {
+  const transactionsAmounts = dummyTransactions
+    .map(transaction => transaction.amount)
+  const balance = transactionsAmounts
+    .reduce((accumulator,transaction)=>accumulator+transaction,0)
+    .toFixed(2)
+  const income = transactionsAmounts
+    .filter(value => value>0)
+    .reduce((accumulator,value)=>accumulator+value,0)
+    .toFixed(2)
+  const expense = Math.abs(transactionsAmounts
+    .filter(value => value<0)
+    .reduce((accumulator,value)=>accumulator+value,0))
+    .toFixed(2)
+  console.log(expense)
+  console.log(income)
+  console.log(balance)
+  incomeDisplay.textContent = `R$ ${income}`
+  expenseDisplay.textContent = `R$ ${expense}`
+  balanceDisplay.textContent = `R$ ${balance}`
+
+}
+
+const init = ()=>{
+  dummyTransactions.forEach(addTransactionIntoDOM)
+}
+
+init()
+updateBalanceValues()
