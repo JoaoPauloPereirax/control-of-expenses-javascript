@@ -5,7 +5,7 @@ const balanceDisplay = document.querySelector('#balance')
 const form = document.querySelector('#form')
 const inputTransactionName = document.querySelector('#text')
 const inputTransactionAmount = document.querySelector('#amount')
-console.log(inputTransactionAmount,inputTransactionName)
+
 
 
 
@@ -17,45 +17,53 @@ let transactions = localStorage
 
 const removeTransaction = (ID)=>{
   transactions = transactions.filter(transaction =>
-    transaction.id !== ID)
+    id !== ID)
   updateLocalStorange()
   init()
 }
 
-const addTransactionIntoDOM = transaction => {
-  const operator = transaction.amount < 0 ? '-' : '+'
-  const CSSClass = transaction.amount < 0 ? 'minus' : 'plus'  
+const addTransactionIntoDOM = ({amount,name,id}) => {
+  const operator = amount < 0 ? '-' : '+'
+  const CSSClass = amount < 0 ? 'minus' : 'plus'  
   const li = document.createElement('li') 
-  const amountWithoutOperator = Math.abs(transaction.amount)
+  const amountWithoutOperator = Math.abs(amount)
 
   li.classList.add(CSSClass)
   li.innerHTML = `
-  ${transaction.name} 
+  ${name} 
   <span>${operator} R$ ${amountWithoutOperator}</span>
-  <button class="delete-btn" onClick="removeTransaction(${transaction.id})">
-  x
-  </button>
+  <button class="delete-btn" onClick="removeTransaction(${id})">x</button>
   `
   transactionUl.append(li)//prepend
 }
 
-const updateBalanceValues = () => {
-  const transactionsAmounts = transactions
-    .map(transaction => transaction.amount)
-  const balance = transactionsAmounts
-    .reduce((accumulator,transaction)=>accumulator+transaction,0)
-    .toFixed(2)
-  const income = transactionsAmounts
-    .filter(value => value>0)
-    .reduce((accumulator,value)=>accumulator+value,0)
-    .toFixed(2)
-  const expense = Math.abs(transactionsAmounts
+const getExpenses = transactionsAmounts =>Math.abs(transactionsAmounts
     .filter(value => value<0)
     .reduce((accumulator,value)=>accumulator+value,0))
     .toFixed(2)
+
+const getIncome = transactionsAmounts => transactionsAmounts
+.filter(value => value>0)
+.reduce((accumulator,value)=>accumulator+value,0)
+.toFixed(2)
+
+const getTotal = transactionsAmounts => transactionsAmounts
+.reduce((accumulator,transaction)=>accumulator+transaction,0)
+.toFixed(2)
+
+const updateBalanceValues = () => {
+  const transactionsAmounts = transactions.map(({amount}) => amount)
+
+  const total = getTotal(transactionsAmounts)
+
+  const income = getIncome(transactionsAmounts)
+
+  const expense = getExpenses(transactionsAmounts)
+  
   incomeDisplay.textContent = `R$ ${income}`
   expenseDisplay.textContent = `R$ ${expense}`
-  balanceDisplay.textContent = `R$ ${balance}`
+  balanceDisplay.textContent = `R$ ${total}`
+  
 
 }
 
@@ -68,32 +76,46 @@ init()
 
 const updateLocalStorange = () => {
   localStorage.setItem('transactions', JSON.stringify(transactions))
+  
 }
-
 updateBalanceValues()
 
-const generateId = ()=>Math.round(Math.random()*1000)
 
-form.addEventListener('submit', event =>{
+const addToTransactionsArray = (transactionName,transactionAmount)=>{
+  transactions.push({
+    id: generateId(),
+    name: transactionName,
+    amount: Number(transactionAmount)
+  })
+
+}
+
+const cleanInputs = ()=>{
+  inputTransactionName.value = ''
+  inputTransactionAmount.value = ''
+}
+
+const handleFormSubmit = event =>{
   event.preventDefault()
 
   const transactionName = inputTransactionName.value.trim()
   const transactionAmount = inputTransactionAmount.value.trim()
+  const isSomeInputEmpty = transactionName == '' || transactionAmount == ''
 
-  if(transactionName == '' || transactionAmount == ''){
+  if(isSomeInputEmpty){
     alert('Preencha tanto o nome quanto a transação!')
     return
   }
-  const transaction = {
-    id: generateId(),
-    name: transactionName,
-    amount: Number(transactionAmount)
-  }
-  transactions.push(transaction)
+  addToTransactionsArray(transactionName,transactionAmount) 
+  
   init()
   updateLocalStorange()
+  cleanInputs()
 
-  inputTransactionName.value = ''
-  inputTransactionAmount.value = ''
+}
 
-})
+const generateId = ()=>Math.round(Math.random()*1000)
+
+
+
+form.addEventListener('submit', handleFormSubmit)
